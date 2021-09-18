@@ -6,6 +6,7 @@ namespace TmdbProxy\RequestHandlers;
 use DateInterval;
 use Exception;
 use Flight;
+use TmdbProxy\Helpers\Config;
 
 class ProxyRequestHandler
 {
@@ -33,12 +34,12 @@ class ProxyRequestHandler
         } else {
             $url = 'https://api.themoviedb.org' . parse_url($path, PHP_URL_PATH);
             $query = $request->query->jsonSerialize();
-            $query['api_key'] = Flight::get('apiKey');
+            $query['api_key'] = Config::get('tmdb.apiKey');
             $response = $client->request($request->method, $url, compact('query'));
 
             $result = $response->toArray();
             if ($response->getStatusCode() === 200) {
-                $ttl = new DateInterval('P' . Flight::get('ttlMinutes') . 'M');
+                $ttl = new DateInterval('P' . Config::get('cache.ttlMinutes') . 'M');
                 $cache->set($cacheKey, $result, $ttl);
             }
             $result['cached'] = false;

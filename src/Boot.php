@@ -11,6 +11,7 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpClient\HttpClient;
 use Dotenv\Dotenv;
+use TmdbProxy\Helpers\Config;
 
 class Boot
 {
@@ -33,15 +34,14 @@ class Boot
 
     protected function setVariables()
     {
-        Flight::set('apiKey', $_ENV['TMDB_API_KEY'] ?? '');
-        Flight::set('ttlMinutes', $_ENV['CACHE_TTL_MINUTES'] ?? 1);
-        Flight::set('debug', isset($_ENV['DEBUG']) ? filter_var($_ENV['DEBUG'], FILTER_VALIDATE_BOOLEAN) : true);
+        $settings = require_once CONFIG_DIR . 'settings.php';
+        Config::init($settings);
         Flight::set('flight.log_errors', true);
     }
 
     protected function createCacheEngine()
     {
-        $filesystemAdapter = new Local(CACHE_DIR);
+        $filesystemAdapter = new Local(Config::get('cache.dir'));
         $filesystem = new Filesystem($filesystemAdapter);
         $pool = new FilesystemCachePool($filesystem);
         Flight::set('CACHE_ENGINE', new SimpleCacheBridge($pool));
