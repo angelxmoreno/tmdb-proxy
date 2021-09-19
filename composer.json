@@ -20,4 +20,8 @@
             "email": "angelxmoreno@gmail.com"
         }
     ]
+    "scripts": {
+        "start": "php -S localhost:8000 -t public/",
+        "generate-schema": "php ./vendor/bin/atlas-skeleton.php config/atlas.php"
+    }
 }

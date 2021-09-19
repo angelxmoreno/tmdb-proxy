@@ -1,10 +1,10 @@
 <?php
 require_once '../vendor/autoload.php';
-require_once '../src/config/constants.php';
+require_once '../config/constants.php';
 
-use TmdbProxy\Boot;
+use TmdbProxy\Boot\App;
 
-$app = new Boot();
+$app = new App();
 $app->init()
     ->loadRoutes()
     ->start();

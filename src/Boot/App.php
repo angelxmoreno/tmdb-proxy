@@ -1,26 +1,28 @@
 <?php
 declare(strict_types=1);
 
-namespace TmdbProxy;
+namespace TmdbProxy\Boot;
 
+use Atlas\Orm\Atlas;
+use Atlas\Orm\Transaction\AutoTransact;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
 use Cache\Bridge\SimpleCache\SimpleCacheBridge;
-use Exception;
+use Dotenv\Dotenv;
 use Flight;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpClient\HttpClient;
-use Dotenv\Dotenv;
 use TmdbProxy\Helpers\Config;
 
-class Boot
+class App
 {
-    public function init(): Boot
+    public function init(): App
     {
         $this->loadEnv();
         $this->setVariables();
         $this->createCacheEngine();
         $this->createHttpClient();
+        $this->createDbConnection();
         $this->setErrorHandler();
 
         return $this;
@@ -52,30 +54,23 @@ class Boot
         Flight::set('HTTP_CLIENT', HttpClient::create());
     }
 
-    protected function setErrorHandler()
+    protected function createDbConnection()
     {
-        Flight::map('error', function (Exception $ex) {
-            header('Content-type: application/json');
-            $statusCode = $ex->getCode() > 99 ? $ex->getCode() : 400;
-            $payload = [
-                'code' => $ex->getCode(),
-                'success' => false,
-            ];
-
-            if (Flight::get('debug')) {
-                $payload = array_merge($payload, [
-                    'type' => get_class($ex),
-                    'message' => $ex->getMessage(),
-                    'file' => $ex->getFile(),
-                    'line' => $ex->getLine(),
-                    'trace' => $ex->getTrace(),
-                ]);
-            }
-            Flight::halt($statusCode, json_encode($payload));
-        });
+        $atlas = Atlas::new(
+            Config::get('database.type').':host='.Config::get('database.host').';dbname='.Config::get('database.name'),
+            Config::get('database.username'),
+            Config::get('database.password'),
+            AutoTransact::CLASS
+        );
+        Flight::set('ATLAS', $atlas);
     }
 
-    public function loadRoutes(): Boot
+    protected function setErrorHandler()
+    {
+        Flight::map('error', new ErrorHandler());
+    }
+
+    public function loadRoutes(): App
     {
         require_once CONFIG_DIR . 'routes.php';
 
