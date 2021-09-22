@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace TmdbProxy\Boot;
 
-use Atlas\Orm\Atlas;
-use Atlas\Orm\Transaction\AutoTransact;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
 use Cache\Bridge\SimpleCache\SimpleCacheBridge;
 use Dotenv\Dotenv;
@@ -56,13 +54,7 @@ class App
 
     protected function createDbConnection()
     {
-        $atlas = Atlas::new(
-            Config::get('database.type').':host='.Config::get('database.host').';dbname='.Config::get('database.name'),
-            Config::get('database.username'),
-            Config::get('database.password'),
-            AutoTransact::CLASS
-        );
-        Flight::set('ATLAS', $atlas);
+
     }
 
     protected function setErrorHandler()
