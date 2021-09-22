@@ -8,6 +8,6 @@ class RegistrationService
 {
     public function register(array $userData): User
     {
-        
+
     }
 }
